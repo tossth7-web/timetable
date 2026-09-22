@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "admin",
+  "description": "教务系统内置窗口：只允许发事件（把抓到的课表 HTML 发给主窗口），不需要任何文件/对话框权限",
+  "windows": ["admin"],
+  "permissions": ["core:event:default"]
+}

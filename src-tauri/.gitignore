@@ -1,0 +1,11 @@
+# target
+target/
+
+# 由 tauri 生成
+gen/schemas/
+gen/android/
+gen/apple/
+
+# `npx tauri icon` 会一并生成移动端图标目录，本项目只做桌面端
+icons/android/
+icons/ios/

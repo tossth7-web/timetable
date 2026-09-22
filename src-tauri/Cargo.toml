@@ -1,0 +1,28 @@
+[package]
+name = "timetable"
+version = "0.1.0"
+description = "本地课表"
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "timetable_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# http_get：预留的教务导入命令；ocr_image：本地 Umi-OCR 调用（两者都在 Rust 侧发请求）
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tokio = { version = "1", features = ["time"] }
+base64 = "0.22"
+
+# 教务课表 HTML 解析（src/admin.rs）
+regex = "1"

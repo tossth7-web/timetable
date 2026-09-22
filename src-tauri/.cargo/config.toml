@@ -1,0 +1,13 @@
+# 国内网络直连 crates.io 会超时（本机实测：index.crates.io 连不上、本地代理未运行）。
+# 走 rsproxy 镜像。在能直连 crates.io 的网络里可以删掉本文件。
+[source.crates-io]
+replace-with = 'rsproxy-sparse'
+
+[source.rsproxy-sparse]
+registry = 'sparse+https://rsproxy.cn/index/'
+
+[registries.rsproxy]
+index = 'sparse+https://rsproxy.cn/index/'
+
+[net]
+git-fetch-with-cli = true

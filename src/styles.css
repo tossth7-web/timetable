@@ -1,0 +1,740 @@
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --fg: #1a1d21;
+  --muted: #6b7280;
+  --line: #e3e6ea;
+  --accent: #2563eb;
+  --warn: #eab308; /* 低置信度标黄 */
+  --warn-text: #a16207;
+  --axis: 72px; /* 左侧节次列固定宽度，不随屏幕拉伸 */
+  --period-h: 64px;
+  --night-h: 104px;
+  --grid-max: 1200px; /* 课表容器上限，防止大屏被拉扁 */
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181c;
+    --card: #1e2126;
+    --fg: #e8eaed;
+    --muted: #9aa0a6;
+    --line: #2e3238;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+a {
+  color: var(--accent);
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0 0 12px;
+}
+
+h3 {
+  font-size: 0.95rem;
+  margin: 20px 0 8px;
+  color: var(--muted);
+}
+
+code {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* 布局：手机顶部标题 + 底部 tabbar，桌面左侧分页 */
+.app {
+  max-width: 100%;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-weight: 700;
+}
+
+.tabs {
+  display: none;
+  gap: 4px;
+}
+
+.tabs a {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--muted);
+}
+
+.tabs a.on {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+main {
+  padding: 14px;
+  padding-bottom: 84px;
+}
+
+.tabbar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar a {
+  padding: 12px 0;
+  text-align: center;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tabbar a.on {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  main {
+    padding: 20px 24px 32px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .tabbar {
+    display: none;
+  }
+  :root {
+    --period-h: 72px;
+    --night-h: 116px;
+  }
+}
+
+/* 周课表网格 */
+.reminder {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  font-size: 0.85rem;
+}
+
+/* 晚自习整行：极淡底 + 时间轴侧分界线（细节在下方网格规则里） */
+
+.course {
+  position: relative;
+}
+
+.note-dot {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 0.72rem;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.period-row.night .idx {
+  color: var(--accent);
+}
+
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg);
+  font-size: 0.85rem;
+}
+
+label.inline input {
+  width: 64px;
+}
+
+.weekbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* 左侧控件组：上一周 / 周次下拉 / 下一周 / 回到本周，紧凑不拉伸 */
+.weekbar .nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+/* 即使外层误设 flex/grid，下拉框也不许被拉满整行 */
+.weekbar select,
+.weekbar .nav > * {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.weekbar button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.weekbar button.ghost {
+  width: auto;
+  padding: 0 12px;
+  font-size: 0.85rem;
+}
+
+.weekbar select {
+  width: auto;
+  max-width: 120px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  padding: 0 8px;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* 窄屏（手机）：给网格一个最小宽度，靠容器横向滚动；列不会被压成一条 */
+@media (max-width: 620px) {
+  .grid {
+    min-width: 560px;
+  }
+  .schedule {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+}
+
+.grid {
+  display: grid;
+  /* 左侧节次列固定 72px；右侧 7 天等分剩余空间（minmax(0,1fr) 保证不撑破容器） */
+  grid-template-columns: var(--axis) repeat(7, minmax(0, 1fr));
+  /* 行高：第 1 行给星期表头（auto），其余按 JS 传进来的 --period-rows 逐行给（晚自习行更高） */
+  grid-template-rows: auto var(--period-rows);
+  grid-auto-flow: row;
+  gap: 3px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  max-width: var(--grid-max);
+  margin: 0 auto;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.cell {
+  min-width: 0;
+}
+
+.grid > .corner {
+  grid-column: 1;
+  grid-row: 1;
+  background: var(--card);
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 6px 0;
+  text-align: center;
+}
+
+.grid > .head {
+  grid-row: 1;
+  text-align: center;
+  padding: 6px 2px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+
+.grid > .head b {
+  display: block;
+  font-size: 0.82rem;
+}
+
+.grid > .head small {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.grid > .axis {
+  grid-column: 1;
+  background: var(--card);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.25;
+  padding: 5px 2px 0;
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.grid > .axis b {
+  display: block;
+  color: var(--fg);
+  font-size: 0.8rem;
+}
+
+.grid > .axis b em {
+  font-style: normal;
+  font-size: 0.62rem;
+  color: var(--accent);
+  margin-left: 3px;
+}
+
+.grid > .axis small {
+  display: block;
+}
+
+.grid > .axis .call {
+  color: var(--accent);
+  font-size: 0.6rem;
+}
+
+.grid > .axis.missing {
+  opacity: 0.5;
+}
+
+/* 晚自习整行：时间轴侧细分界线 + 淡底，一眼能认出特殊节次 */
+.grid > .axis.night {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-right: 2px solid var(--accent);
+  border-radius: 6px 0 0 6px;
+}
+
+.grid > .col {
+  display: grid;
+  grid-template-rows: var(--period-rows);
+  gap: 3px;
+  border-radius: 8px;
+}
+
+.head.today,
+.col.today {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.col.today.night {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.course {
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  padding: 6px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+}
+
+.course b {
+  font-size: 0.8rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.course small {
+  font-size: 0.68rem;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* 表单 / 卡片 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 640px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  flex: 1;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 1px;
+}
+
+.two {
+  display: flex;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--fg);
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.danger {
+  color: #dc2626;
+  border-color: color-mix(in srgb, #dc2626 40%, var(--line));
+}
+
+.btn.small {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button.icon {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.colors {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch.on {
+  border-color: var(--fg);
+  transform: scale(1.08);
+}
+
+.period-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 36px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.period-row .idx {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.notice {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.preview {
+  max-width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  align-self: flex-start;
+}
+
+/* 识图结果预览 */
+.drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.draft {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.draft.off {
+  opacity: 0.5;
+}
+
+/* 低置信度：标黄 + 左侧黄边，提醒人工确认 */
+.draft.low {
+  border-color: var(--warn);
+  border-left: 4px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.warn {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--warn-text);
+}
+
+/* 未解析行的原文 */
+.raw {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 手动粘贴课表 HTML */
+.htmlpaste {
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* 解析诊断列表 */
+.debuglist {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+/* 汇总提示条：可点，跳到第一条待确认行 */
+.warnbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.warnbar .jump {
+  margin-left: auto;
+  color: var(--warn-text);
+  white-space: nowrap;
+}
+
+.pick {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg);
+}
+
+.pick input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+/* 弹层 */
+.sheet {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--fg);
+  padding: 0;
+  width: min(440px, 92vw);
+  max-height: 80dvh;
+}
+
+.sheet::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sheet-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.sheet-body {
+  padding: 14px;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px 12px;
+  margin: 0 0 16px;
+}
+
+.detail dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.detail dd {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .sheet {
+    width: 100%;
+    max-width: 100%;
+    margin: auto auto 0;
+    border-radius: 16px 16px 0 0;
+  }
+  .sheet[open] {
+    animation: slide-up 0.18s ease-out;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(12px);
+    opacity: 0.6;
+  }
+}
+
+.prose p,
+.prose li {
+  font-size: 0.9rem;
+}
+
+.prose ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}

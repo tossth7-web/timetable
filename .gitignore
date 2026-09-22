@@ -1,0 +1,32 @@
+# 依赖与构建产物
+node_modules/
+dist/
+dev-dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# 本机截图 / 抓包 / 一次性脚本（里面有真实课表和个人信息，绝不入库）
+.shots/
+
+# 本地导出的课表备份（真实课程、教室、教师，可能含个人信息）
+import-*.json
+backup-*.json
+
+# 环境变量与凭据
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+npm-debug.log*
