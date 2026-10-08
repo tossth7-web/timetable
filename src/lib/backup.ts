@@ -12,7 +12,12 @@ export async function exportJson(): Promise<string> {
 
 /** 读取备份文件内容，兼容纯数组 */
 export async function parseBackup(text: string) {
-  const raw = JSON.parse(text) as unknown
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    throw new Error('不是合法的 JSON（可能没粘全，或被聊天软件截断/加料）')
+  }
   const obj = Array.isArray(raw) ? { courses: raw } : (raw as Record<string, unknown>)
   if (!Array.isArray(obj.courses) || !obj.courses.every(isCourse)) throw new Error('文件里没有可识别的课程数据')
   return {

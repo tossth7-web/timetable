@@ -12,6 +12,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/
 export default function SettingsPage() {
   const [s, setS] = useState<Settings | null>(null)
   const [msg, setMsg] = useState('')
+  const [pasteText, setPasteText] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -38,14 +39,27 @@ export default function SettingsPage() {
     setMsg('浏览器已开始下载备份文件')
   }
 
-  const doImport = async (file: File) => {
+  /** 选文件导入与粘贴文本导入走同一条恢复逻辑 */
+  const applyBackup = async (text: string) => {
     try {
-      const n = await restore(await file.text())
+      const n = await restore(text)
       setS(await getSettings())
       setMsg(`已导入 ${n} 门课（覆盖原有课表）`)
+      return true
     } catch (e) {
       setMsg('导入失败：' + (e as Error).message)
+      return false
     }
+  }
+
+  const doImport = async (file: File) => {
+    await applyBackup(await file.text())
+  }
+
+  const doImportPaste = async () => {
+    const text = pasteText.trim()
+    if (!text) return setMsg('先把备份 JSON 粘进来，再点「导入粘贴的内容」')
+    if (await applyBackup(text)) setPasteText('')
   }
 
   const clearAll = async () => {
@@ -179,6 +193,31 @@ export default function SettingsPage() {
           e.target.value = ''
         }}
       />
+
+      <details className="pastejson">
+        <summary>或者直接粘贴备份 JSON 文本</summary>
+        <p className="hint">
+          手机上不方便传文件时用这个：在电脑上打开备份文件全选复制，发到手机（微信/QQ 发给自己都行），
+          在下面长按粘贴，再点「导入粘贴的内容」。粘贴的内容只在这台设备的这个框里，不会上传。
+        </p>
+        <textarea
+          className="jsonpaste"
+          value={pasteText}
+          onChange={(e) => setPasteText(e.target.value)}
+          placeholder={'把备份 JSON 全文粘到这里（以 {"app":"timetable" 开头）'}
+          rows={5}
+        />
+        <div className="row">
+          <button className="btn" onClick={doImportPaste}>
+            导入粘贴的内容
+          </button>
+          {!!pasteText && (
+            <button className="btn" onClick={() => setPasteText('')}>
+              清空粘贴框
+            </button>
+          )}
+        </div>
+      </details>
 
       {msg && <p className="notice">{msg}</p>}
       <p className="hint">备份是明文 JSON，含全部课程与设置；数据只在本机，不会上传。</p>
