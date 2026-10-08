@@ -1,0 +1,52 @@
+# 推到 main 就自动构建并发布到 GitHub Pages：https://tossth7-web.github.io/timetable/
+#
+# 子路径部署靠 VITE_BASE=/timetable/ 告诉 vite：base、manifest 的 start_url/scope、
+# Service Worker 的注册路径与作用域都会跟着走。这三样对不上，资源会 404、
+# 离线缓存会落空、Chrome 还会判定「不可安装」，所以别删这个环境变量。
+#
+# 仓库 Settings → Pages → Source 必须是 GitHub Actions，工作流才有权发布。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: 构建（子路径 /timetable/）
+        run: npm run build
+        env:
+          VITE_BASE: /timetable/
+      - uses: actions/configure-pages@v6.0.0
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5.0.1

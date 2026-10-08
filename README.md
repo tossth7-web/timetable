@@ -2,7 +2,7 @@
 
 本地存储的跨平台课表：Windows 桌面端（Tauri 2）+ Web/PWA + 安卓 APK。数据只存在你自己的机器上，不上传、不登录、无账号。
 
-**怎么拿到**：安卓手机装 [Releases](https://github.com/tossth7-web/timetable/releases/latest) 里的 APK（Android 7.0 以上，自签名，指纹见「[签名](#签名)」）；或者自己部署网页版（见「部署到 Cloudflare Pages」），手机浏览器打开后「添加到主屏幕」。
+**怎么拿到**：网页版直接打开 <https://tossth7-web.github.io/timetable/>（手机浏览器里「添加到主屏幕」就是全屏、可离线的 App）；安卓手机也可以装 [Releases](https://github.com/tossth7-web/timetable/releases/latest) 里的 APK（Android 7.0 以上，自签名，指纹见「[签名](#签名)」）。
 
 > English README coming soon.
 
@@ -79,36 +79,36 @@ pwsh scripts/tauri-build.ps1 -RunTests
 
 **macOS / Linux**：本仓库目前**没有**打包好的 dmg / AppImage，需要在各自平台上自行构建（`npm run tauri build`）。见下方「已知限制」。
 
-## 部署到 Cloudflare Pages
+## 在线打开
 
-纯静态，任何静态托管都能用；下面是 Cloudflare Pages（免费、自带 HTTPS，PWA 必须要 HTTPS）。
+<https://tossth7-web.github.io/timetable/> —— 纯静态站点，手机浏览器打开后「添加到主屏幕」就是一个全屏、可离线的 App。
 
-1. **先推到 GitHub**（Pages 从 Git 仓库构建）：
+发布由仓库自带的 GitHub Actions 工作流（`.github/workflows/deploy-pages.yml`）负责：推到 `main` 就自动 `npm ci` → `npm test` → `npm run build` → 发布到 GitHub Pages。子路径 `/timetable/` 是通过环境变量 `VITE_BASE=/timetable/` 传给 vite 的，`base`、manifest 的 `start_url`/`scope`、Service Worker 的作用域都会跟着走（这三样对不上，Chrome 会判定「不可安装」）。以后每次 `git push` 到 `main` 都会自动重新部署，手机上打开会自动更新（`registerType: 'autoUpdate'`）。
 
-   ```bash
-   cd timetable
-   gh repo create timetable --public --source=. --remote=origin --push
-   # 或者手动：git remote add origin <仓库地址> && git push -u origin main
-   ```
+> 想部署到自己的账号：fork 本仓库 → **Settings → Pages → Source** 选 `GitHub Actions` → 把工作流里的 `VITE_BASE` 改成你自己的路径（仓库名子路径；若是 `<用户名>.github.io` 仓库或绑了自定义域名，用 `/`）。
 
-2. Cloudflare 控制台 → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
-3. 选刚才那个仓库，分支 `main`
-4. 构建配置：
+## 部署到别的静态托管（可选）
+
+任何静态托管都能用；**根路径**部署不需要设 `VITE_BASE`（默认就是 `/`）。下面是 Cloudflare Pages（免费、自带 HTTPS）：
+
+1. Cloudflare 控制台 → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**
+2. 选这个仓库，分支 `main`
+3. 构建配置：
    - **Framework preset**：`Vite`（或 None）
    - **Build command**：`npm run build`
    - **Build output directory**：`dist`
    - **环境变量**：**一个都不用加**。`vite.config.ts` 里关掉 Service Worker 的条件是 `TAURI_ENV_PLATFORM` 存在——那是 Tauri 构建时才有的变量，Cloudflare 上不存在，所以 **Web 构建照常生成 `sw.js` + `manifest.webmanifest`**（这正是手机上要离线用的前提）。
-5. Node 版本用默认的即可（仓库里 `.nvmrc` 写的是 22；`vite-plugin-pwa` 0.21 + Vite 5 在 Node 18/20/22 上都跑过）
-6. 仓库根目录的 `.npmrc` 写了 `production=false` / `include=dev`——**这一条别删**。有些构建环境（Cloudflare Pages、Docker 镜像）会带上 `NODE_ENV=production`，那样 `npm ci` 会跳过 devDependencies，而 `tsc` / `vite` 都在 devDependencies 里，构建会直接失败（本地复现：`NODE_ENV=production npm ci` 只装 84 个包、没有 tsc；补上 `.npmrc` 后是 292 个包）
-7. 部署完拿到 `https://<项目名>.pages.dev`
-8. **手机浏览器**打开这个域名 → 菜单里「添加到主屏幕」/「安装应用」→ 桌面出现课表图标，点开是全屏无地址栏的 standalone 窗口
-9. 以后 `git push` 到 `main` 会自动重新部署；手机上打开会自动更新（`registerType: 'autoUpdate'`）
+4. Node 版本用默认的即可（仓库里 `.nvmrc` 写的是 22；`vite-plugin-pwa` 0.21 + Vite 5 在 Node 18/20/22 上都跑过）
+5. 仓库根目录的 `.npmrc` 写了 `include=dev`——**这一条别删**。有些构建环境（Cloudflare Pages、Docker 镜像）会带上 `NODE_ENV=production`，那样 `npm ci` 会跳过 devDependencies，而 `tsc` / `vite` 都在 devDependencies 里，构建会直接失败（本地复现：`NODE_ENV=production npm ci` 只装 84 个包、没有 tsc；补上 `.npmrc` 后是 292 个包）
+6. 部署完拿到 `https://<项目名>.pages.dev`
+7. **手机浏览器**打开这个域名 → 菜单里「添加到主屏幕」/「安装应用」→ 桌面出现课表图标，点开是全屏无地址栏的 standalone 窗口
+8. 以后 `git push` 到 `main` 会自动重新部署
 
-> 也可以把 `dist/` 直接拖给任意静态托管（Vercel：Framework 选 Vite，Build/Output 同上）。**必须 HTTPS**，HTTP 下 Service Worker 不注册，就没有离线能力。
+> 也可以把 `dist/` 直接拖给任意静态托管（Vercel：Framework 选 Vite，Build/Output 同上）。**必须 HTTPS**：HTTP 下 Service Worker 不注册，就没有离线能力（本机 `npm run preview`、`localhost` 例外）。
 
 ## 手机使用
 
-把 `.pages.dev` 域名加到主屏幕后就是一个独立 App（standalone、无地址栏、可离线）。窄屏做了适配：左侧节次列在横向滑动时钉住、顶部提醒条和周次栏不跟着滚走、底部固定五个标签、点课程色块弹出的是贴底抽屉。
+把 <https://tossth7-web.github.io/timetable/> 加到主屏幕后就是一个独立 App（standalone、无地址栏、可离线）。窄屏做了适配：左侧节次列在横向滑动时钉住、顶部提醒条和周次栏不跟着滚走、底部固定五个标签、点课程色块弹出的是贴底抽屉。
 
 安卓手机也可以不装网页版，直接装 [Releases](https://github.com/tossth7-web/timetable/releases/latest) 里的 APK：自带图标、启动更快，功能与网页版完全一致（教务导入同样需要在电脑上导好再把备份导进来）。
 
