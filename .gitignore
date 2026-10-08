@@ -21,6 +21,11 @@ backup-*.json
 *.p12
 *.pfx
 
+# 安卓签名（keystore 与口令绝不入库；公开仓库里别人 clone 下来会回退到 debug 签名）
+android/key.properties
+*.jks
+*.keystore
+
 # 编辑器 / 系统
 .vscode/
 .idea/

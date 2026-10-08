@@ -1,6 +1,8 @@
 # 课表 · Timetable
 
-本地存储的跨平台课表：Windows 桌面端（Tauri 2）+ Web/PWA。数据只存在你自己的机器上，不上传、不登录、无账号。
+本地存储的跨平台课表：Windows 桌面端（Tauri 2）+ Web/PWA + 安卓 APK。数据只存在你自己的机器上，不上传、不登录、无账号。
+
+**怎么拿到**：安卓手机装 [Releases](../../releases/latest) 里的 APK（Android 7.0 以上，自签名，指纹见「[签名](#签名)」）；或者自己部署网页版（见「部署到 Cloudflare Pages」），手机浏览器打开后「添加到主屏幕」。
 
 > English README coming soon.
 
@@ -96,16 +98,19 @@ pwsh scripts/tauri-build.ps1 -RunTests
    - **Build command**：`npm run build`
    - **Build output directory**：`dist`
    - **环境变量**：**一个都不用加**。`vite.config.ts` 里关掉 Service Worker 的条件是 `TAURI_ENV_PLATFORM` 存在——那是 Tauri 构建时才有的变量，Cloudflare 上不存在，所以 **Web 构建照常生成 `sw.js` + `manifest.webmanifest`**（这正是手机上要离线用的前提）。
-5. Node 版本用默认的即可（`vite-plugin-pwa` 0.21 + Vite 5 在 Node 18/20/22 上都跑过）
-6. 部署完拿到 `https://<项目名>.pages.dev`
-7. **手机浏览器**打开这个域名 → 菜单里「添加到主屏幕」/「安装应用」→ 桌面出现课表图标，点开是全屏无地址栏的 standalone 窗口
-8. 以后 `git push` 到 `main` 会自动重新部署；手机上打开会自动更新（`registerType: 'autoUpdate'`）
+5. Node 版本用默认的即可（仓库里 `.nvmrc` 写的是 22；`vite-plugin-pwa` 0.21 + Vite 5 在 Node 18/20/22 上都跑过）
+6. 仓库根目录的 `.npmrc` 写了 `production=false` / `include=dev`——**这一条别删**。有些构建环境（Cloudflare Pages、Docker 镜像）会带上 `NODE_ENV=production`，那样 `npm ci` 会跳过 devDependencies，而 `tsc` / `vite` 都在 devDependencies 里，构建会直接失败（本地复现：`NODE_ENV=production npm ci` 只装 84 个包、没有 tsc；补上 `.npmrc` 后是 292 个包）
+7. 部署完拿到 `https://<项目名>.pages.dev`
+8. **手机浏览器**打开这个域名 → 菜单里「添加到主屏幕」/「安装应用」→ 桌面出现课表图标，点开是全屏无地址栏的 standalone 窗口
+9. 以后 `git push` 到 `main` 会自动重新部署；手机上打开会自动更新（`registerType: 'autoUpdate'`）
 
 > 也可以把 `dist/` 直接拖给任意静态托管（Vercel：Framework 选 Vite，Build/Output 同上）。**必须 HTTPS**，HTTP 下 Service Worker 不注册，就没有离线能力。
 
 ## 手机使用
 
 把 `.pages.dev` 域名加到主屏幕后就是一个独立 App（standalone、无地址栏、可离线）。窄屏做了适配：左侧节次列在横向滑动时钉住、顶部提醒条和周次栏不跟着滚走、底部固定五个标签、点课程色块弹出的是贴底抽屉。
+
+安卓手机也可以不装网页版，直接装 [Releases](../../releases/latest) 里的 APK：自带图标、启动更快，功能与网页版完全一致（教务导入同样需要在电脑上导好再把备份导进来）。
 
 **手机上能用**
 
@@ -128,15 +133,15 @@ pwsh scripts/tauri-build.ps1 -RunTests
 
 ![手机端](docs/screenshot-mobile.png)
 
-## 安卓安装包（自用）
+## 安卓安装包
 
-不上架、不进应用商店，只是给自己手机套一个 Capacitor 原生壳。`android/` 是 Capacitor 生成的工程，`npm run android:sync` 负责把 `dist/` 同步进去。
+不上架、不进应用商店：自己用，同时把构建好的包放在 [Releases](../../releases/latest) 供人下载。`android/` 是 Capacitor 生成的工程，`npm run android:sync` 负责把 `dist/` 同步进去。
 
 ```bash
-npm run android:sync   # tsc --noEmit && vite build --mode capacitor && cap sync android
+npm run android:sync    # tsc --noEmit && vite build --mode capacitor && cap sync android
 cd android
-./gradlew assembleDebug
-# 产物：android/app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease   # 发给别人用这个；自己日常调试可以 assembleDebug
+# 产物：android/app/build/outputs/apk/release/app-release.apk
 ```
 
 `capacitor` 模式下不打 Service Worker（`vite.config.ts` 里按 mode 关掉），所以 APK 的资源包里没有 `sw.js`：安卓端本来就没有"离线安装"这回事，资源是打包在 APK 里的。本机（Windows）的工具链都装在 E 盘：
@@ -148,6 +153,24 @@ cd android
 | `GRADLE_USER_HOME` | `E:\Android\gradle-home`（已预置 gradle-8.14.3-all，不用再下载） |
 
 `android/local.properties` 里的 `sdk.dir` 是本机 SDK 路径，已 gitignore。注意两点：APK 里 `android.permission.INTERNET` 被显式删掉了，所以安卓端连云端 OCR 也用不了（要用得自己加回 `AndroidManifest.xml`）；启动图标暂时还是 Capacitor 默认图标。
+
+### 签名
+
+发布出去的 APK 是**自签名**的（既不是 debug 签名，也不是任何受信任 CA 签的），证书信息：
+
+| 项 | 值 |
+| --- | --- |
+| 签名者 | `CN=timetable, OU=Self-signed, O=timetable project, C=CN` |
+| 证书 SHA-256 | `B7:67:4E:12:A5:DD:43:CA:90:85:4B:03:F9:38:BD:D6:0D:FA:B0:A1:72:73:5E:AF:4C:A1:66:5A:33:F1:E7:E6` |
+| 签名方案 | APK Signature Scheme v2（`minSdkVersion 24` = Android 7.0 起支持，够用） |
+
+下载到的 APK 可以自己核对是不是同一个作者签的：
+
+```bash
+keytool -printcert -jarfile app-release.apk    # SHA-256 应与上表一致
+```
+
+keystore 路径与口令放在 `android/key.properties`（已 gitignore，**不在仓库里**）。`android/app/build.gradle` 做了兼容：这个文件不存在时自动回退到 debug 签名，所以别人 clone 下来没有密钥**也能构建、能装**。反过来要注意：**换了签名就不能覆盖安装**，同一包名签名不同安卓会直接拒绝，必须先卸载（课表数据请先「导出 JSON」或粘贴备份）。
 
 ## 隐私
 
