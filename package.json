@@ -6,12 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:android": "tsc --noEmit && vite build --mode capacitor",
     "preview": "vite preview",
     "test": "node --test \"test/**/*.test.mjs\"",
+    "android:sync": "npm run build:android && cap sync android",
     "tauri": "tauri",
     "tauri:build": "pwsh -NoProfile -File scripts/tauri-build.ps1"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "dexie": "^4.0.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

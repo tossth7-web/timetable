@@ -1,0 +1,5 @@
+{
+  "appId": "com.local.timetable",
+  "appName": "课表",
+  "webDir": "dist"
+}
