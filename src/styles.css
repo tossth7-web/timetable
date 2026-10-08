@@ -613,11 +613,24 @@ button.icon {
   word-break: break-all;
 }
 
-/* 手动粘贴课表 HTML */
-.htmlpaste {
+/* 手动粘贴课表 HTML / 备份 JSON */
+.htmlpaste,
+.jsonpaste {
   font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
   min-height: 90px;
   resize: vertical;
+}
+
+/* 备份：粘贴 JSON 文本导入 */
+.pastejson {
+  margin-top: 10px;
+}
+.pastejson summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.pastejson > *:not(summary) {
+  margin-top: 8px;
 }
 
 /* 解析诊断列表 */
@@ -737,4 +750,32 @@ button.icon {
 .prose ul {
   padding-left: 20px;
   margin: 8px 0;
+}
+
+/* 手机横向滚动时把左侧节次列钉住，滑到周五也知道这是第几节。
+   必须放在 .grid 的 overflow-x 定义之后：同优先级下后者胜，写在前面会被它盖掉。 */
+@media (max-width: 620px) {
+  /* .grid 自己一旦是滚动容器，sticky 就绑在它身上（而它并不滚动），钉不住列。
+     手机端把横向滚动交给 .schedule，sticky 才有正确的参照。 */
+  .grid {
+    overflow: visible;
+  }
+  .grid > .corner,
+  .grid > .axis {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+  /* 钉住的格子必须不透明；晚自习那格原来是半透明叠色，会漏出滚过去的课 */
+  .grid > .axis.night {
+    background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  }
+  /* 提醒条和周次栏在 .schedule 里面，横向滑动课表时会跟着滚走（截图里只剩个空框）。
+     它们不是网格的一部分，一起钉住。 */
+  .schedule > .reminder,
+  .schedule > .weekbar {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+  }
 }
