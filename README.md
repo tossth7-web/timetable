@@ -2,7 +2,7 @@
 
 本地存储的跨平台课表：Windows 桌面端（Tauri 2）+ Web/PWA + 安卓 APK。数据只存在你自己的机器上，不上传、不登录、无账号。
 
-**怎么拿到**：安卓手机装 [Releases](../../releases/latest) 里的 APK（Android 7.0 以上，自签名，指纹见「[签名](#签名)」）；或者自己部署网页版（见「部署到 Cloudflare Pages」），手机浏览器打开后「添加到主屏幕」。
+**怎么拿到**：安卓手机装 [Releases](https://github.com/tossth7-web/timetable/releases/latest) 里的 APK（Android 7.0 以上，自签名，指纹见「[签名](#签名)」）；或者自己部署网页版（见「部署到 Cloudflare Pages」），手机浏览器打开后「添加到主屏幕」。
 
 > English README coming soon.
 
@@ -110,7 +110,7 @@ pwsh scripts/tauri-build.ps1 -RunTests
 
 把 `.pages.dev` 域名加到主屏幕后就是一个独立 App（standalone、无地址栏、可离线）。窄屏做了适配：左侧节次列在横向滑动时钉住、顶部提醒条和周次栏不跟着滚走、底部固定五个标签、点课程色块弹出的是贴底抽屉。
 
-安卓手机也可以不装网页版，直接装 [Releases](../../releases/latest) 里的 APK：自带图标、启动更快，功能与网页版完全一致（教务导入同样需要在电脑上导好再把备份导进来）。
+安卓手机也可以不装网页版，直接装 [Releases](https://github.com/tossth7-web/timetable/releases/latest) 里的 APK：自带图标、启动更快，功能与网页版完全一致（教务导入同样需要在电脑上导好再把备份导进来）。
 
 **手机上能用**
 
@@ -135,7 +135,7 @@ pwsh scripts/tauri-build.ps1 -RunTests
 
 ## 安卓安装包
 
-不上架、不进应用商店：自己用，同时把构建好的包放在 [Releases](../../releases/latest) 供人下载。`android/` 是 Capacitor 生成的工程，`npm run android:sync` 负责把 `dist/` 同步进去。
+不上架、不进应用商店：自己用，同时把构建好的包放在 [Releases](https://github.com/tossth7-web/timetable/releases/latest) 供人下载。`android/` 是 Capacitor 生成的工程，`npm run android:sync` 负责把 `dist/` 同步进去。
 
 ```bash
 npm run android:sync    # tsc --noEmit && vite build --mode capacitor && cap sync android
